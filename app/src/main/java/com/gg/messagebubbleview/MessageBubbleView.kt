@@ -173,7 +173,6 @@ class MessageBubbleView : View {
 
     fun setDragBitmap(bitmap: Bitmap) {
         mDragBitmap = bitmap
-        invalidate()
     }
 
     fun handleActionUp() {

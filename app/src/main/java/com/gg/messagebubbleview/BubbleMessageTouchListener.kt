@@ -3,6 +3,7 @@ package com.gg.messagebubbleview
 import android.content.Context
 import android.graphics.*
 import android.graphics.drawable.AnimationDrawable
+import android.util.Log
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
@@ -58,10 +59,12 @@ class BubbleMessageTouchListener(view: View, context: Context, listener: BubbleD
         }
     }
 
-    init {
-    }
+    private var mIsTouch = false
 
     override fun onTouch(v: View?, event: MotionEvent?): Boolean {
+        val location = IntArray(2)
+        mView.getLocationOnScreen(location)
+        val bitmap = getBitmapFromView(mView)
 
         when (event!!.action) {
             MotionEvent.ACTION_DOWN -> {
@@ -70,37 +73,46 @@ class BubbleMessageTouchListener(view: View, context: Context, listener: BubbleD
                 mWindowManager.addView(mMessageBubbleView, mParams)
 
 
-                val location = IntArray(2)
-                mView.getLocationOnScreen(location)
+                Log.w("location x", "---" + location[0])
+                Log.w("location y", "---" + location[1])
+                Log.w("mView.width", "---" + mView.width)
+                Log.w("mView.height", "---" + mView.height)
+                Log.w("mView.width", "---" + mView.measuredWidth)
+                Log.w("mView.height", "---" + mView.measuredHeight)
+                Log.w("event x", "---" + event.rawX)
+                Log.w("event y", "---" + event.rawY)
+                Log.w("status bar height", "---" + BubbleUtils.getStatusBarHeight(mContext))
 
-
-
-//                Log.w("location x", "---" + location[0])
-//                Log.w("location y", "---" + location[1])
-//                Log.w("mView x", "---" + mView.width)
-//                Log.w("mView y", "---" + mView.height)
-//                Log.w("status bar height", "---" + BubbleUtils.getStatusBarHeight(mContext))
-                mView.visibility = View.INVISIBLE
-
-                mMessageBubbleView.initPoint(
-                        location[0] + mView.width / 2f,
-                        location[1].toFloat() + mView.height / 2f
-                )
-
-
-                val bitmap = getBitmapFromView(mView)
-                mMessageBubbleView.setDragBitmap(bitmap)
+                updateView(event, location, bitmap)
             }
 
             MotionEvent.ACTION_MOVE -> {
-                mMessageBubbleView.updateDragPoint(event.rawX, event.rawY)
+                updateView(event, location, bitmap)
             }
             MotionEvent.ACTION_UP -> {
+                mIsTouch = false
                 mMessageBubbleView.handleActionUp()
             }
         }
 
         return true
+    }
+
+    private fun updateView(event: MotionEvent, location: IntArray, bitmap: Bitmap) {
+        if ((event.rawX - mView.width) >= location[0] || (event.rawY - mView.height) >= location[1] || mIsTouch) {
+
+            mIsTouch = true
+            mView.visibility = View.INVISIBLE
+
+            mMessageBubbleView.initPoint(
+                    location[0] + mView.width / 2f,
+                    location[1].toFloat() + mView.height / 2f
+            )
+
+
+            mMessageBubbleView.setDragBitmap(bitmap)
+            mMessageBubbleView.updateDragPoint(event.rawX, event.rawY)
+        }
     }
 
     override fun dismiss(pointF: PointF) {
