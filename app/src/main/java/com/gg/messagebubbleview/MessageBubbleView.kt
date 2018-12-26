@@ -54,7 +54,7 @@ class MessageBubbleView : View {
 
 
     private fun dip2sp(dip: Float): Float =
-            TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dip, resources.displayMetrics)
+        TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dip, resources.displayMetrics)
 
 
     override fun onDraw(canvas: Canvas?) {
@@ -72,7 +72,12 @@ class MessageBubbleView : View {
             canvas.drawPath(bezierPath, mPaint)
         }
         if (this::mDragBitmap.isInitialized) {
-            canvas.drawBitmap(mDragBitmap, mDragPoint.x - mDragBitmap.width / 2, mDragPoint.y - mDragBitmap.height / 2, null)
+            canvas.drawBitmap(
+                mDragBitmap,
+                mDragPoint.x - mDragBitmap.width / 2,
+                mDragPoint.y - mDragBitmap.height / 2,
+                null
+            )
         }
 
     }
@@ -118,7 +123,7 @@ class MessageBubbleView : View {
     }
 
     private fun getControlPointF(): PointF =
-            PointF((mDragPoint.x + mFixationPoint.x) / 2, (mDragPoint.y + mFixationPoint.y) / 2)
+        PointF((mDragPoint.x + mFixationPoint.x) / 2, (mDragPoint.y + mFixationPoint.y) / 2)
 
     /**
      * 获取两个圆之间的距离
@@ -159,7 +164,7 @@ class MessageBubbleView : View {
     fun updateDragPoint(x: Float, y: Float) {
         mDragPoint.x = x
         mDragPoint.y = y
-        invalidate()
+        postInvalidate()
     }
 
     /**
@@ -168,11 +173,12 @@ class MessageBubbleView : View {
     fun initPoint(floatX: Float, floatY: Float) {
         mDragPoint = PointF(floatX, floatY)
         mFixationPoint = PointF(floatX, floatY)
-        invalidate()
+        postInvalidate()
     }
 
     fun setDragBitmap(bitmap: Bitmap) {
         mDragBitmap = bitmap
+        postInvalidate()
     }
 
     fun handleActionUp() {

@@ -7,8 +7,9 @@
         android:layout_height="match_parent"
         tools:context=".MainActivity">
 
-    <TextView android:layout_width="100dp" android:layout_height="40dp"
-              android:text="hello world"
+    <TextView android:layout_width="50dp" android:layout_height="50dp"
+              android:text="99"
+              android:gravity="center"
               android:id="@+id/hello"
               android:background="@color/colorAccent"/>
 

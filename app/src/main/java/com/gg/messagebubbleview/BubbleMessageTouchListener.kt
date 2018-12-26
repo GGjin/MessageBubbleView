@@ -18,7 +18,7 @@ import android.widget.ImageView
  * Explain :
  */
 class BubbleMessageTouchListener(view: View, context: Context, listener: BubbleDisappearListener?) :
-        View.OnTouchListener, MessageBubbleView.MessageBubbleListener {
+    View.OnTouchListener, MessageBubbleView.MessageBubbleListener {
 
     private val mContext: Context by lazy { context }
 
@@ -55,11 +55,18 @@ class BubbleMessageTouchListener(view: View, context: Context, listener: BubbleD
             format = PixelFormat.TRANSPARENT
 //            type = WindowManager.LayoutParams.TYPE_SYSTEM_ALERT
             // 可在全屏幕布局, 不受状态栏影响
-            flags = WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS or WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN or WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE // 最初不可获取焦点, 这样不影响底层应用接收触摸事件
+            flags = WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS or
+                    WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN or
+                    WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE // 最初不可获取焦点, 这样不影响底层应用接收触摸事件
         }
     }
 
     private var mIsTouch = false
+
+    private var offsetX = 0f
+    private var offsetY = 0f
+
+    private val postDelayedTime = 50L
 
     override fun onTouch(v: View?, event: MotionEvent?): Boolean {
         val location = IntArray(2)
@@ -73,21 +80,44 @@ class BubbleMessageTouchListener(view: View, context: Context, listener: BubbleD
                 mWindowManager.addView(mMessageBubbleView, mParams)
 
 
-                Log.w("location x", "---" + location[0])
-                Log.w("location y", "---" + location[1])
-                Log.w("mView.width", "---" + mView.width)
-                Log.w("mView.height", "---" + mView.height)
-                Log.w("mView.width", "---" + mView.measuredWidth)
-                Log.w("mView.height", "---" + mView.measuredHeight)
-                Log.w("event x", "---" + event.rawX)
-                Log.w("event y", "---" + event.rawY)
-                Log.w("status bar height", "---" + BubbleUtils.getStatusBarHeight(mContext))
+//                Log.w("location x", "---" + location[0])
+//                Log.w("location y", "---" + location[1])
+//                Log.w("mView.width", "---" + mView.width)
+//                Log.w("mView.height", "---" + mView.height)
+//                Log.w("mView.width", "---" + mView.measuredWidth)
+//                Log.w("mView.height", "---" + mView.measuredHeight)
+//                Log.w("event x", "---" + event.rawX)
+//                Log.w("event y", "---" + event.rawY)
+//                Log.w("status bar height", "---" + BubbleUtils.getStatusBarHeight(mContext))
 
-                updateView(event, location, bitmap)
+                mIsTouch = true
+
+                //初始中心点
+                val initX = location[0] + mView.width / 2f
+                val initY = location[1] + mView.height / 2f
+
+                //偏移量
+                offsetX = event.rawX - initX
+                offsetY = event.rawY - initY
+
+                mMessageBubbleView.initPoint(initX, initY)
+
+
+                mMessageBubbleView.setDragBitmap(bitmap)
+
+
+                mView.postDelayed({
+
+                    mView.visibility = View.INVISIBLE
+
+                }, postDelayedTime)
+
+
             }
 
             MotionEvent.ACTION_MOVE -> {
-                updateView(event, location, bitmap)
+                mMessageBubbleView.updateDragPoint(event.rawX - offsetX, event.rawY - offsetY)
+
             }
             MotionEvent.ACTION_UP -> {
                 mIsTouch = false
@@ -96,23 +126,6 @@ class BubbleMessageTouchListener(view: View, context: Context, listener: BubbleD
         }
 
         return true
-    }
-
-    private fun updateView(event: MotionEvent, location: IntArray, bitmap: Bitmap) {
-        if ((event.rawX - mView.width) >= location[0] || (event.rawY - mView.height) >= location[1] || mIsTouch) {
-
-            mIsTouch = true
-            mView.visibility = View.INVISIBLE
-
-            mMessageBubbleView.initPoint(
-                    location[0] + mView.width / 2f,
-                    location[1].toFloat() + mView.height / 2f
-            )
-
-
-            mMessageBubbleView.setDragBitmap(bitmap)
-            mMessageBubbleView.updateDragPoint(event.rawX, event.rawY)
-        }
     }
 
     override fun dismiss(pointF: PointF) {
@@ -142,8 +155,11 @@ class BubbleMessageTouchListener(view: View, context: Context, listener: BubbleD
     }
 
     override fun restore() {
-        mWindowManager.removeView(mMessageBubbleView)
         mView.visibility = View.VISIBLE
+        mView.postDelayed({
+
+            mWindowManager.removeView(mMessageBubbleView)
+        }, postDelayedTime)
     }
 
     private fun getBitmapFromView(view: View): Bitmap {
